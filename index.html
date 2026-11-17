@@ -52,12 +52,16 @@
                 <option value="Antarctic">Antarctic</option>
             </select>
 
-            <label for="sortCountries">Sort by:</label>
-            <select id="sortCountries">
-                <option value="name">Sort by Name (A-Z)</option>
-                <option value="population">Highest Population</option>
-                <option value="area">Largest Area</option>
-            </select>
+           <label for="sortCountries">Sort by:</label>
+
+<select id="sortCountries">
+    <option value="name-asc">Name (A-Z)</option>
+    <option value="name-desc">Name (Z-A)</option>
+    <option value="population-desc">Highest Population</option>
+    <option value="population-asc">Lowest Population</option>
+    <option value="area-desc">Largest Area</option>
+    <option value="area-asc">Smallest Area</option>
+</select>
 
             <button id="refreshButton" type="button">
                 Refresh Countries

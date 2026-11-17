@@ -7,7 +7,7 @@ let returnSection = "home";
 let activeSection = "home";
 
 let selectedCompareKeys = [];
-
+let countryController = null;
 const container = document.getElementById("countriesContainer");
 const searchInput = document.getElementById("searchCountry");
 const regionFilter = document.getElementById("regionFilter");
@@ -39,16 +39,73 @@ const compareBackButton = document.getElementById("compareBackButton");
 
 
 
-function getCountryName(country) {
-    if (typeof country.name === "string") {
-        return country.name;
+  async function getCountries() {
+
+    
+    if (countryController) {
+        countryController.abort();
     }
 
-    return country.name?.common ||
-        country.name?.official ||
-        "Unknown Country";
-}
+    
+    countryController = new AbortController();
 
+    const currentController = countryController;
+
+    try {
+        loadingMessage.hidden = false;
+        errorBox.hidden = true;
+        emptyMessage.hidden = true;
+        container.innerHTML = "";
+
+        countryCount.textContent = "Loading countries...";
+
+        const response = await fetch(API_URL, {
+            signal: currentController.signal
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch countries");
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+            throw new Error("Invalid country data");
+        }
+
+        if (countryController !== currentController) {
+            return;
+        }
+
+        allCountries = data;
+
+        loadCountryDropdown();
+        filterCountries();
+
+        if (activeSection === "favorites") {
+            renderFavorites();
+        }
+
+        console.log("Total Countries:", allCountries.length);
+
+    } catch (error) {
+
+        if (error.name === "AbortError") {
+            return;
+        }
+
+        console.log("Error:", error);
+
+        errorBox.hidden = false;
+        countryCount.textContent = "Countries could not be loaded.";
+
+    } finally {
+
+        if (countryController === currentController) {
+            loadingMessage.hidden = true;
+        }
+    }
+}
 
 
 function getCountryFlag(country) {

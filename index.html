@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Explorer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>🌍 World Explorer</h1>
+        <button id="favoritesButton" type="button">
+            My Favorites
+        </button>
+    </header>
+
+    <main>
+
+        
+        <section id="home">
+
+            <h2>Explore the World</h2>
+            <p>Discover countries around the globe.</p>
+
+            <label for="searchCountry">Search a country:</label>
+            <input type="text" id="searchCountry" placeholder="Search a country...">
+
+            <label for="countrySelect">Choose a Country:</label>
+            <select id="countrySelect">
+                <option value="">All Countries</option>
+            </select>
+
+            <label for="regionFilter">Filter by Region:</label>
+            <select id="regionFilter">
+                <option value="all">All Regions</option>
+                <option value="Asia">Asia</option>
+                <option value="Europe">Europe</option>
+                <option value="Africa">Africa</option>
+                <option value="Americas">Americas</option>
+                <option value="Oceania">Oceania</option>
+                <option value="Antarctic">Antarctic</option>
+            </select>
+
+            <label for="sortCountries">Sort by:</label>
+            <select id="sortCountries">
+                <option value="name">Sort by Name (A-Z)</option>
+                <option value="population">Highest Population</option>
+                <option value="area">Largest Area</option>
+            </select>
+
+            <button id="refreshButton" type="button">
+                Refresh Countries
+            </button>
+
+            <p id="countryCount">Countries will appear here.</p>
+
+            <p id="loadingMessage" hidden>
+                Loading countries...
+            </p>
+
+            <div id="errorBox" hidden>
+                <p id="errorMessage">
+                    Unable to load countries. Please try again.
+                </p>
+                <button id="retryButton" type="button">
+                    Try Again
+                </button>
+            </div>
+
+            <p id="emptyMessage" hidden>
+                No countries found.
+            </p>
+
+            <div id="countriesContainer" class="countries-container"></div>
+
+        </section>
+
+        
+        <section id="countryDetails" hidden>
+            <h2>Country Details</h2>
+            <div id="detailsContainer"></div>
+        </section>
+
+        
+        <section id="favorites" hidden>
+
+            <h2>My Favorite Countries</h2>
+
+            <p id="favoritesMessage">
+                Your saved countries will appear here.
+            </p>
+
+            
+            <p id="selectionMessage">
+                Select two countries to compare.
+            </p>
+
+            
+            <button id="compareButton" type="button" disabled>
+                Compare Selected Countries
+            </button>
+
+            <div id="favoritesContainer" class="countries-container"></div>
+
+        </section>
+
+    
+        <section id="compare" hidden>
+
+            <h2>Compare Countries</h2>
+
+            <p id="compareMessage">
+                Your selected countries will appear here.
+            </p>
+
+            <div id="compareContainer"></div>
+
+            <button id="compareBackButton" type="button">
+                Back to Favorites
+            </button>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 World Explorer. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

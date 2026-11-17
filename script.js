@@ -302,10 +302,13 @@ function filterCountries() {
     let filteredCountries = allCountries.filter((country) => {
         const countryName = getCountryName(country);
 
-        const matchesSearch = countryName
-            .toLowerCase()
-            .includes(searchValue);
+       const capitalName = Array.isArray(country.capital)
+    ? country.capital.join(" ")
+    : country.capital || "";
 
+const matchesSearch =
+    countryName.toLowerCase().includes(searchValue) ||
+    capitalName.toLowerCase().includes(searchValue);
         const matchesRegion =
             selectedRegion === "all" ||
             country.region === selectedRegion;

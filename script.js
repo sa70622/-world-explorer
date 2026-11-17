@@ -113,9 +113,12 @@ function getFavorites() {
         return [];
 
     } catch (error) {
-        console.log("Favorites Error:", error);
-        return [];
-    }
+    console.log("Favorites Error:", error);
+
+    localStorage.removeItem("favoriteCountries");
+
+    return [];
+}
 }
 
 

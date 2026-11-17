@@ -37,14 +37,8 @@ const compareMessage = document.getElementById("compareMessage");
 const compareButton = document.getElementById("compareButton");
 const compareBackButton = document.getElementById("compareBackButton");
 
-const oldBackButton = document.getElementById("backButton");
-
-if (oldBackButton) {
-    oldBackButton.remove();
-}
 
 
-// Get country name
 function getCountryName(country) {
     if (typeof country.name === "string") {
         return country.name;
@@ -56,7 +50,7 @@ function getCountryName(country) {
 }
 
 
-// Get country flag
+
 function getCountryFlag(country) {
     return country.flags?.svg ||
         country.flags?.png ||
@@ -64,7 +58,7 @@ function getCountryFlag(country) {
 }
 
 
-// Get unique country key
+
 function getCountryKey(country) {
     return String(
         country.cca3 ||
@@ -75,7 +69,7 @@ function getCountryKey(country) {
 }
 
 
-// Prevent HTML injection
+
 function escapeHTML(value) {
     return String(value).replace(/[&<>"']/g, (character) => {
         const entities = {
@@ -91,7 +85,7 @@ function escapeHTML(value) {
 }
 
 
-// Get favorites from LocalStorage
+
 function getFavorites() {
     try {
         const savedFavorites = localStorage.getItem("favoriteCountries");
@@ -116,7 +110,7 @@ function getFavorites() {
 }
 
 
-// Save favorites
+
 function saveFavorites(favorites) {
     try {
         localStorage.setItem(
@@ -131,13 +125,13 @@ function saveFavorites(favorites) {
 }
 
 
-// Check favorite
+
 function isFavorite(country) {
     return getFavorites().includes(getCountryKey(country));
 }
 
 
-// Add or remove favorite
+
 function toggleFavorite(country) {
     const favorites = getFavorites();
     const countryKey = getCountryKey(country);
@@ -172,7 +166,7 @@ function toggleFavorite(country) {
 }
 
 
-// Fetch countries from API
+
 async function getCountries() {
     try {
         loadingMessage.hidden = false;
@@ -217,7 +211,7 @@ async function getCountries() {
 }
 
 
-// Load country dropdown
+
 function loadCountryDropdown() {
     countrySelect.innerHTML = '<option value="">All Countries</option>';
 
@@ -237,14 +231,18 @@ function loadCountryDropdown() {
 }
 
 
-// Display country cards
+
 function displayCountries(countries) {
     container.innerHTML = "";
+
     emptyMessage.hidden = countries.length !== 0;
 
     if (countries.length === 0) {
         return;
     }
+
+    
+    const fragment = document.createDocumentFragment();
 
     countries.forEach((country) => {
         const card = document.createElement("div");
@@ -283,12 +281,16 @@ function displayCountries(countries) {
             </p>
         `;
 
-        container.appendChild(card);
+       
+        fragment.appendChild(card);
     });
+
+
+    container.appendChild(fragment);
 }
 
 
-// Search, filter and sort countries
+
 function filterCountries() {
     const searchValue = searchInput.value.toLowerCase().trim();
     const selectedRegion = regionFilter.value;
@@ -299,22 +301,21 @@ function filterCountries() {
 
         const countryName = getCountryName(country);
 
-        // Get capital name
         const capitalName = Array.isArray(country.capital)
             ? country.capital.join(" ")
             : country.capital || "";
 
-        // Search by country name and capital
+       
         const matchesSearch =
             countryName.toLowerCase().includes(searchValue) ||
             capitalName.toLowerCase().includes(searchValue);
 
-        // Filter by region
+     
         const matchesRegion =
             selectedRegion === "all" ||
             country.region === selectedRegion;
 
-        // Filter by selected country
+     
         const matchesCountry =
             selectedCountry === "" ||
             countryName === selectedCountry;
@@ -323,7 +324,6 @@ function filterCountries() {
     });
 
 
-    // Sorting options
 
     if (selectedSort === "name-asc") {
 
@@ -369,7 +369,7 @@ function filterCountries() {
 }
 
 
-// Get currencies
+
 function getCurrencies(country) {
     const currencies = country.currencies;
 
@@ -387,7 +387,6 @@ function getCurrencies(country) {
 }
 
 
-// Get languages
 function getLanguages(country) {
     const languages = country.languages;
 
@@ -407,7 +406,6 @@ function getLanguages(country) {
 }
 
 
-// Show country details
 function showCountryDetails(country) {
 
     if (activeSection !== "details") {
@@ -557,7 +555,7 @@ function showCountryDetails(country) {
 }
 
 
-// Render favorite countries
+
 function renderFavorites() {
     const favoriteKeys = getFavorites();
 
@@ -640,7 +638,7 @@ function renderFavorites() {
 }
 
 
-// Country cards event delegation
+
 container.addEventListener("click", (event) => {
     const card = event.target.closest(".country-card");
 
@@ -657,7 +655,7 @@ container.addEventListener("click", (event) => {
 });
 
 
-// Details event delegation
+
 detailsContainer.addEventListener("click", (event) => {
 
     const backButton = event.target.closest("#backButton");
@@ -707,7 +705,7 @@ detailsContainer.addEventListener("click", (event) => {
 });
 
 
-// Favorites event delegation
+
 favoritesContainer.addEventListener("click", (event) => {
 
     const compareSelect = event.target.closest("[data-compare-key]");
@@ -772,7 +770,7 @@ favoritesContainer.addEventListener("click", (event) => {
 });
 
 
-// Favorites page
+
 favoritesButton.addEventListener("click", () => {
     activeSection = "favorites";
 
@@ -785,7 +783,7 @@ favoritesButton.addEventListener("click", () => {
 });
 
 
-// Compare countries
+
 compareButton.addEventListener("click", () => {
 
     if (selectedCompareKeys.length !== 2) {
@@ -864,7 +862,7 @@ compareButton.addEventListener("click", () => {
 });
 
 
-// Back to favorites
+
 compareBackButton.addEventListener("click", () => {
     compareSection.hidden = true;
     favoritesSection.hidden = false;
@@ -875,29 +873,27 @@ compareBackButton.addEventListener("click", () => {
 });
 
 
-// Search event
+
 searchInput.addEventListener("input", filterCountries);
 
-
-// Region filter event
 regionFilter.addEventListener("change", filterCountries);
 
 
-// Country dropdown event
+
 countrySelect.addEventListener("change", filterCountries);
 
 
-// Sorting event
+
 sortCountries.addEventListener("change", filterCountries);
 
 
-// Refresh event
+
 refreshButton.addEventListener("click", getCountries);
 
 
-// Retry event
+
 retryButton.addEventListener("click", getCountries);
 
 
-// Initial API call
+
 getCountries();

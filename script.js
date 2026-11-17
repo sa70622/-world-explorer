@@ -376,8 +376,13 @@ function getLanguages(country) {
 
 
 
-function showCountryDetails(country) {
-    returnSection = activeSection;
+  function showCountryDetails(country) {
+
+    // Save previous section only when opening details first time
+    if (activeSection !== "details") {
+        returnSection = activeSection;
+    }
+
     activeSection = "details";
     currentCountry = country;
 

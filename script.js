@@ -5,9 +5,10 @@ let allCountries = [];
 let currentCountry = null;
 let returnSection = "home";
 let activeSection = "home";
-
 let selectedCompareKeys = [];
 let countryController = null;
+
+
 const container = document.getElementById("countriesContainer");
 const searchInput = document.getElementById("searchCountry");
 const regionFilter = document.getElementById("regionFilter");
@@ -39,79 +40,33 @@ const compareBackButton = document.getElementById("compareBackButton");
 
 
 
-  async function getCountries() {
-
-    
-    if (countryController) {
-        countryController.abort();
+function getCountryName(country) {
+    if (typeof country.name === "string") {
+        return country.name;
     }
 
-    
-    countryController = new AbortController();
-
-    const currentController = countryController;
-
-    try {
-        loadingMessage.hidden = false;
-        errorBox.hidden = true;
-        emptyMessage.hidden = true;
-        container.innerHTML = "";
-
-        countryCount.textContent = "Loading countries...";
-
-        const response = await fetch(API_URL, {
-            signal: currentController.signal
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to fetch countries");
-        }
-
-        const data = await response.json();
-
-        if (!Array.isArray(data)) {
-            throw new Error("Invalid country data");
-        }
-
-        if (countryController !== currentController) {
-            return;
-        }
-
-        allCountries = data;
-
-        loadCountryDropdown();
-        filterCountries();
-
-        if (activeSection === "favorites") {
-            renderFavorites();
-        }
-
-        console.log("Total Countries:", allCountries.length);
-
-    } catch (error) {
-
-        if (error.name === "AbortError") {
-            return;
-        }
-
-        console.log("Error:", error);
-
-        errorBox.hidden = false;
-        countryCount.textContent = "Countries could not be loaded.";
-
-    } finally {
-
-        if (countryController === currentController) {
-            loadingMessage.hidden = true;
-        }
-    }
+    return (
+        country.name?.common ||
+        country.name?.official ||
+        country.name?.name ||
+        country.name ||
+        "Unknown"
+    );
 }
 
 
+
 function getCountryFlag(country) {
-    return country.flags?.svg ||
+    if (typeof country.flags === "string") {
+        return country.flags;
+    }
+
+    return (
+        country.flags?.svg ||
         country.flags?.png ||
-        "";
+        country.flag ||
+        ""
+    );
 }
 
 
@@ -159,9 +114,7 @@ function getFavorites() {
 
     } catch (error) {
         console.log("Favorites Error:", error);
-
         localStorage.removeItem("favoriteCountries");
-
         return [];
     }
 }
@@ -194,7 +147,6 @@ function toggleFavorite(country) {
     const countryKey = getCountryKey(country);
 
     if (favorites.includes(countryKey)) {
-
         const updatedFavorites = favorites.filter((key) => {
             return key !== countryKey;
         });
@@ -206,7 +158,6 @@ function toggleFavorite(country) {
         });
 
     } else {
-
         favorites.push(countryKey);
         saveFavorites(favorites);
     }
@@ -225,6 +176,14 @@ function toggleFavorite(country) {
 
 
 async function getCountries() {
+
+    if (countryController) {
+        countryController.abort();
+    }
+
+    countryController = new AbortController();
+    const currentController = countryController;
+
     try {
         loadingMessage.hidden = false;
         errorBox.hidden = true;
@@ -233,7 +192,9 @@ async function getCountries() {
 
         countryCount.textContent = "Loading countries...";
 
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, {
+            signal: currentController.signal
+        });
 
         if (!response.ok) {
             throw new Error("Failed to fetch countries");
@@ -245,7 +206,14 @@ async function getCountries() {
             throw new Error("Invalid country data");
         }
 
+        if (countryController !== currentController) {
+            return;
+        }
+
         allCountries = data;
+
+        console.log("Countries Data:", allCountries);
+        console.log("Total Countries:", allCountries.length);
 
         loadCountryDropdown();
         filterCountries();
@@ -254,16 +222,22 @@ async function getCountries() {
             renderFavorites();
         }
 
-        console.log("Total Countries:", allCountries.length);
-
     } catch (error) {
-        console.log("Error:", error);
+
+        if (error.name === "AbortError") {
+            return;
+        }
+
+        console.log("Countries Error:", error);
 
         errorBox.hidden = false;
         countryCount.textContent = "Countries could not be loaded.";
 
     } finally {
-        loadingMessage.hidden = true;
+
+        if (countryController === currentController) {
+            loadingMessage.hidden = true;
+        }
     }
 }
 
@@ -277,16 +251,14 @@ function loadCountryDropdown() {
     });
 
     sortedCountries.forEach((country) => {
-        const countryName = getCountryName(country);
         const option = document.createElement("option");
 
-        option.value = countryName;
-        option.textContent = countryName;
+        option.value = getCountryName(country);
+        option.textContent = getCountryName(country);
 
         countrySelect.appendChild(option);
     });
 }
-
 
 
 function displayCountries(countries) {
@@ -298,7 +270,6 @@ function displayCountries(countries) {
         return;
     }
 
-    
     const fragment = document.createDocumentFragment();
 
     countries.forEach((country) => {
@@ -319,7 +290,11 @@ function displayCountries(countries) {
 
             <p>
                 <b>Capital:</b>
-                ${escapeHTML(country.capital?.[0] || country.capital || "N/A")}
+                ${escapeHTML(
+                    Array.isArray(country.capital)
+                        ? country.capital.join(", ")
+                        : country.capital || "N/A"
+                )}
             </p>
 
             <p>
@@ -338,10 +313,8 @@ function displayCountries(countries) {
             </p>
         `;
 
-       
         fragment.appendChild(card);
     });
-
 
     container.appendChild(fragment);
 }
@@ -362,17 +335,14 @@ function filterCountries() {
             ? country.capital.join(" ")
             : country.capital || "";
 
-       
         const matchesSearch =
             countryName.toLowerCase().includes(searchValue) ||
             capitalName.toLowerCase().includes(searchValue);
 
-     
         const matchesRegion =
             selectedRegion === "all" ||
             country.region === selectedRegion;
 
-     
         const matchesCountry =
             selectedCountry === "" ||
             countryName === selectedCountry;
@@ -380,43 +350,35 @@ function filterCountries() {
         return matchesSearch && matchesRegion && matchesCountry;
     });
 
-
-
     if (selectedSort === "name-asc") {
-
-        filteredCountries.sort((a, b) => {
-            return getCountryName(a).localeCompare(getCountryName(b));
-        });
+        filteredCountries.sort((a, b) =>
+            getCountryName(a).localeCompare(getCountryName(b))
+        );
 
     } else if (selectedSort === "name-desc") {
-
-        filteredCountries.sort((a, b) => {
-            return getCountryName(b).localeCompare(getCountryName(a));
-        });
+        filteredCountries.sort((a, b) =>
+            getCountryName(b).localeCompare(getCountryName(a))
+        );
 
     } else if (selectedSort === "population-desc") {
-
-        filteredCountries.sort((a, b) => {
-            return Number(b.population || 0) - Number(a.population || 0);
-        });
+        filteredCountries.sort((a, b) =>
+            Number(b.population || 0) - Number(a.population || 0)
+        );
 
     } else if (selectedSort === "population-asc") {
-
-        filteredCountries.sort((a, b) => {
-            return Number(a.population || 0) - Number(b.population || 0);
-        });
+        filteredCountries.sort((a, b) =>
+            Number(a.population || 0) - Number(b.population || 0)
+        );
 
     } else if (selectedSort === "area-desc") {
-
-        filteredCountries.sort((a, b) => {
-            return Number(b.area || 0) - Number(a.area || 0);
-        });
+        filteredCountries.sort((a, b) =>
+            Number(b.area || 0) - Number(a.area || 0)
+        );
 
     } else if (selectedSort === "area-asc") {
-
-        filteredCountries.sort((a, b) => {
-            return Number(a.area || 0) - Number(b.area || 0);
-        });
+        filteredCountries.sort((a, b) =>
+            Number(a.area || 0) - Number(b.area || 0)
+        );
     }
 
     countryCount.textContent =
@@ -444,6 +406,7 @@ function getCurrencies(country) {
 }
 
 
+
 function getLanguages(country) {
     const languages = country.languages;
 
@@ -461,6 +424,7 @@ function getLanguages(country) {
 
     return String(languages);
 }
+
 
 
 function showCountryDetails(country) {
@@ -534,20 +498,18 @@ function showCountryDetails(country) {
 
             <h1>${escapeHTML(countryName)}</h1>
 
-            <p>
-                <b>Official Name:</b>
-                ${escapeHTML(officialName)}
-            </p>
+            <p><b>Official Name:</b> ${escapeHTML(officialName)}</p>
 
             <p>
                 <b>Capital:</b>
-                ${escapeHTML(country.capital?.[0] || country.capital || "N/A")}
+                ${escapeHTML(
+                    Array.isArray(country.capital)
+                        ? country.capital.join(", ")
+                        : country.capital || "N/A"
+                )}
             </p>
 
-            <p>
-                <b>Region:</b>
-                ${escapeHTML(country.region || "N/A")}
-            </p>
+            <p><b>Region:</b> ${escapeHTML(country.region || "N/A")}</p>
 
             <p>
                 <b>Population:</b>
@@ -559,15 +521,9 @@ function showCountryDetails(country) {
                 ${Number(country.area || 0).toLocaleString("en-IN")} km²
             </p>
 
-            <p>
-                <b>Currency:</b>
-                ${escapeHTML(getCurrencies(country))}
-            </p>
+            <p><b>Currency:</b> ${escapeHTML(getCurrencies(country))}</p>
 
-            <p>
-                <b>Languages:</b>
-                ${escapeHTML(getLanguages(country))}
-            </p>
+            <p><b>Languages:</b> ${escapeHTML(getLanguages(country))}</p>
 
             <h3>Border Countries</h3>
 
@@ -577,32 +533,20 @@ function showCountryDetails(country) {
 
             <div class="detail-buttons">
 
-                <button
-                    type="button"
-                    id="favoriteButton"
-                    class="favorite-btn"
-                >
+                <button type="button" id="favoriteButton" class="favorite-btn">
                     ${isFavorite(country)
                         ? "❤️ Remove from Favorites"
                         : "🤍 Add to Favorites"}
                 </button>
 
-                <button
-                    type="button"
-                    id="backButton"
-                    class="back-btn"
-                >
+                <button type="button" id="backButton" class="back-btn">
                     Back to Countries
                 </button>
 
             </div>
 
             <p class="map-link">
-                <a
-                    href="${escapeHTML(mapURL)}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
+                <a href="${escapeHTML(mapURL)}" target="_blank" rel="noopener noreferrer">
                     View on Google Maps
                 </a>
             </p>
@@ -639,6 +583,8 @@ function renderFavorites() {
 
     favoritesMessage.hidden = true;
 
+    const fragment = document.createDocumentFragment();
+
     favoriteCountries.forEach((country) => {
         const card = document.createElement("div");
 
@@ -660,13 +606,14 @@ function renderFavorites() {
 
             <p>
                 <b>Capital:</b>
-                ${escapeHTML(country.capital?.[0] || country.capital || "N/A")}
+                ${escapeHTML(
+                    Array.isArray(country.capital)
+                        ? country.capital.join(", ")
+                        : country.capital || "N/A"
+                )}
             </p>
 
-            <p>
-                <b>Region:</b>
-                ${escapeHTML(country.region || "N/A")}
-            </p>
+            <p><b>Region:</b> ${escapeHTML(country.region || "N/A")}</p>
 
             <p>
                 <b>Population:</b>
@@ -690,8 +637,10 @@ function renderFavorites() {
             </button>
         `;
 
-        favoritesContainer.appendChild(card);
+        fragment.appendChild(card);
     });
+
+    favoritesContainer.appendChild(fragment);
 }
 
 
@@ -724,7 +673,6 @@ detailsContainer.addEventListener("click", (event) => {
             activeSection = "favorites";
             favoritesSection.hidden = false;
             renderFavorites();
-
         } else {
             activeSection = "home";
             homeSection.hidden = false;
@@ -771,13 +719,11 @@ favoritesContainer.addEventListener("click", (event) => {
         const countryKey = compareSelect.dataset.compareKey;
 
         if (selectedCompareKeys.includes(countryKey)) {
-
             selectedCompareKeys = selectedCompareKeys.filter((key) => {
                 return key !== countryKey;
             });
 
         } else {
-
             if (selectedCompareKeys.length === 2) {
                 alert("You can select only two countries!");
                 return;
@@ -884,13 +830,14 @@ compareButton.addEventListener("click", () => {
 
                 <p>
                     <b>Capital:</b>
-                    ${escapeHTML(country.capital?.[0] || country.capital || "N/A")}
+                    ${escapeHTML(
+                        Array.isArray(country.capital)
+                            ? country.capital.join(", ")
+                            : country.capital || "N/A"
+                    )}
                 </p>
 
-                <p>
-                    <b>Region:</b>
-                    ${escapeHTML(country.region || "N/A")}
-                </p>
+                <p><b>Region:</b> ${escapeHTML(country.region || "N/A")}</p>
 
                 <p>
                     <b>Population:</b>
@@ -902,15 +849,9 @@ compareButton.addEventListener("click", () => {
                     ${Number(country.area || 0).toLocaleString("en-IN")} km²
                 </p>
 
-                <p>
-                    <b>Currency:</b>
-                    ${escapeHTML(getCurrencies(country))}
-                </p>
+                <p><b>Currency:</b> ${escapeHTML(getCurrencies(country))}</p>
 
-                <p>
-                    <b>Languages:</b>
-                    ${escapeHTML(getLanguages(country))}
-                </p>
+                <p><b>Languages:</b> ${escapeHTML(getLanguages(country))}</p>
 
             </div>
         `;
@@ -932,23 +873,13 @@ compareBackButton.addEventListener("click", () => {
 
 
 searchInput.addEventListener("input", filterCountries);
-
 regionFilter.addEventListener("change", filterCountries);
-
-
-
 countrySelect.addEventListener("change", filterCountries);
-
-
-
 sortCountries.addEventListener("change", filterCountries);
 
 
 
 refreshButton.addEventListener("click", getCountries);
-
-
-
 retryButton.addEventListener("click", getCountries);
 
 
